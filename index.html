@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Remote URL Downloader to Gofile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              display: ["'Sora'", "sans-serif"],
+              body: ["'Manrope'", "sans-serif"]
+            }
+          }
+        }
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Manrope", sans-serif;
+        background:
+          radial-gradient(circle at 20% 20%, rgba(109, 40, 217, 0.35), transparent 24%),
+          radial-gradient(circle at 80% 18%, rgba(37, 99, 235, 0.28), transparent 22%),
+          linear-gradient(135deg, #040612 0%, #090c1f 50%, #050814 100%);
+      }
+
+      .glass {
+        background: rgba(10, 16, 34, 0.7);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen text-white">
+    <main class="relative flex min-h-screen items-center justify-center px-6 py-12">
+      <div class="absolute inset-0 overflow-hidden">
+        <div class="absolute left-16 top-10 h-64 w-64 rounded-full bg-violet-500/20 blur-3xl"></div>
+        <div class="absolute bottom-8 right-16 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl"></div>
+      </div>
+
+      <section class="relative z-10 w-full max-w-3xl">
+        <div class="glass rounded-[32px] border border-white/10 p-8 shadow-2xl shadow-blue-950/40">
+          <div class="mb-8">
+            <p class="mb-4 inline-flex items-center rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-cyan-200">
+              Live Transfer Dashboard
+            </p>
+            <h1 class="font-display text-4xl font-extrabold sm:text-5xl">
+              Remote URL to
+              <span class="bg-gradient-to-r from-violet-300 via-cyan-200 to-blue-300 bg-clip-text text-transparent">
+                Gofile Downloader
+              </span>
+            </h1>
+            <p class="mt-4 max-w-2xl text-base leading-7 text-slate-300">
+              Paste a remote file URL and stream the transfer progress in real time as the backend downloads the file and uploads it to Gofile.
+            </p>
+          </div>
+
+          <div class="space-y-5">
+            <div>
+              <label for="fileUrl" class="mb-3 block text-sm font-semibold text-slate-200">Remote file URL</label>
+              <input
+                id="fileUrl"
+                type="url"
+                placeholder="https://example.com/video.mp4"
+                class="w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/20"
+              />
+            </div>
+
+            <div id="formError" class="hidden rounded-2xl border border-rose-300/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-100"></div>
+
+            <button
+              id="startBtn"
+              class="w-full rounded-2xl bg-gradient-to-r from-violet-500 via-blue-500 to-cyan-400 px-6 py-4 font-display text-base font-semibold text-white shadow-lg shadow-blue-950/40 transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Connecting Live Session...
+            </button>
+          </div>
+
+          <div id="progressSection" class="mt-8 hidden rounded-[28px] border border-white/10 bg-white/5 p-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p class="text-sm font-semibold text-slate-200">Current status</p>
+                <p id="statusText" class="mt-2 text-lg text-cyan-200">Waiting to start...</p>
+              </div>
+              <div class="rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-right">
+                <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Progress</p>
+                <p id="progressPercent" class="mt-1 font-display text-3xl font-bold text-white">0%</p>
+              </div>
+            </div>
+
+            <div class="mt-6 h-4 overflow-hidden rounded-full bg-white/10">
+              <div
+                id="progressBar"
+                class="h-full w-0 rounded-full bg-gradient-to-r from-violet-500 via-blue-500 to-cyan-400 transition-all duration-500"
+              ></div>
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
+              <p id="phaseText">Not started</p>
+              <p id="bytesText">0 B / 0 B</p>
+            </div>
+
+            <div id="progressError" class="mt-5 hidden rounded-2xl border border-rose-300/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-100"></div>
+          </div>
+
+          <div id="successSection" class="mt-8 hidden rounded-[28px] border border-emerald-300/20 bg-emerald-500/10 p-6">
+            <p class="text-xs uppercase tracking-[0.35em] text-emerald-200/80">Transfer Complete</p>
+            <h2 class="mt-3 font-display text-2xl font-bold text-white">Your Gofile link is ready</h2>
+            <div class="mt-5 flex flex-col gap-3 sm:flex-row">
+              <input
+                id="resultLink"
+                readonly
+                class="min-w-0 flex-1 rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-4 text-sm text-cyan-100 outline-none"
+              />
+              <button
+                id="copyBtn"
+                class="rounded-2xl bg-white px-5 py-4 font-display text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+              >
+                Copy Link
+              </button>
+            </div>
+            <a
+              id="resultAnchor"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="mt-4 inline-block text-sm font-semibold text-cyan-200 underline decoration-cyan-300/40 underline-offset-4"
+            >
+              Open Gofile download page
+            </a>
+            <p id="copyFeedback" class="mt-3 text-sm text-emerald-100/90"></p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const fileUrlInput = document.getElementById("fileUrl");
+      const startBtn = document.getElementById("startBtn");
+      const formError = document.getElementById("formError");
+      const progressSection = document.getElementById("progressSection");
+      const successSection = document.getElementById("successSection");
+      const progressBar = document.getElementById("progressBar");
+      const progressPercent = document.getElementById("progressPercent");
+      const statusText = document.getElementById("statusText");
+      const phaseText = document.getElementById("phaseText");
+      const bytesText = document.getElementById("bytesText");
+      const progressError = document.getElementById("progressError");
+      const resultLink = document.getElementById("resultLink");
+      const resultAnchor = document.getElementById("resultAnchor");
+      const copyBtn = document.getElementById("copyBtn");
+      const copyFeedback = document.getElementById("copyFeedback");
+
+      let eventSource = null;
+      let sessionId = null;
+      let sessionReadyPromise = null;
+      let resolveSessionReady = null;
+
+      function formatBytes(bytes) {
+        if (!Number.isFinite(bytes) || bytes <= 0) {
+          return "0 B";
+        }
+
+        const units = ["B", "KB", "MB", "GB", "TB"];
+        const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+        const value = bytes / 1024 ** exponent;
+        return `${value.toFixed(value >= 100 || exponent === 0 ? 0 : 1)} ${units[exponent]}`;
+      }
+
+      function prepareSessionPromise() {
+        sessionReadyPromise = new Promise((resolve) => {
+          resolveSessionReady = resolve;
+        });
+      }
+
+      function updateButtonState() {
+        const ready = Boolean(sessionId);
+        startBtn.disabled = !ready;
+        startBtn.textContent = ready ? "Start Transfer" : "Connecting Live Session...";
+      }
+
+      function resetMessages() {
+        formError.classList.add("hidden");
+        formError.textContent = "";
+        progressError.classList.add("hidden");
+        progressError.textContent = "";
+        copyFeedback.textContent = "";
+      }
+
+      function connectProgressStream() {
+        if (eventSource) {
+          eventSource.close();
+        }
+
+        sessionId = null;
+        prepareSessionPromise();
+        updateButtonState();
+
+        eventSource = new EventSource("/api/progress");
+
+        eventSource.addEventListener("connected", (event) => {
+          const data = JSON.parse(event.data);
+          sessionId = data.sessionId;
+          if (resolveSessionReady) {
+            resolveSessionReady(sessionId);
+            resolveSessionReady = null;
+          }
+          updateButtonState();
+        });
+
+        eventSource.addEventListener("stage", (event) => {
+          const data = JSON.parse(event.data);
+          progressSection.classList.remove("hidden");
+          statusText.textContent = data.message;
+          phaseText.textContent = data.phase;
+        });
+
+        eventSource.addEventListener("progress", (event) => {
+          const data = JSON.parse(event.data);
+          progressSection.classList.remove("hidden");
+          const percent = Number.isFinite(data.percent) ? data.percent : null;
+          progressPercent.textContent = percent !== null ? `${percent}%` : "LIVE";
+          progressBar.style.width = percent !== null ? `${percent}%` : "68%";
+          bytesText.textContent = `${formatBytes(data.transferredBytes)} / ${data.totalBytes ? formatBytes(data.totalBytes) : "Unknown size"}`;
+        });
+
+        eventSource.addEventListener("success", (event) => {
+          const data = JSON.parse(event.data);
+          successSection.classList.remove("hidden");
+          resultLink.value = data.downloadPage;
+          resultAnchor.href = data.downloadPage;
+        });
+
+        eventSource.addEventListener("error", (event) => {
+          if (!event.data) {
+            return;
+          }
+
+          const data = JSON.parse(event.data);
+          progressError.classList.remove("hidden");
+          progressError.textContent = data.message || "The transfer failed unexpectedly.";
+        });
+
+        eventSource.onerror = () => {
+          sessionId = null;
+          updateButtonState();
+        };
+      }
+
+      async function waitForLiveSession(timeoutMs = 8000) {
+        if (sessionId) {
+          return sessionId;
+        }
+
+        return Promise.race([
+          sessionReadyPromise,
+          new Promise((_, reject) => {
+            window.setTimeout(() => reject(new Error("Live session setup timed out. Refresh and try again.")), timeoutMs);
+          })
+        ]);
+      }
+
+      startBtn.addEventListener("click", async () => {
+        resetMessages();
+        progressSection.classList.remove("hidden");
+        successSection.classList.add("hidden");
+        progressBar.style.width = "0%";
+        progressPercent.textContent = "0%";
+        statusText.textContent = "Contacting backend...";
+        phaseText.textContent = "queued";
+        bytesText.textContent = "0 B / 0 B";
+
+        try {
+          const readySessionId = await waitForLiveSession();
+          const response = await fetch("/api/transfer", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              fileUrl: fileUrlInput.value.trim(),
+              sessionId: readySessionId
+            })
+          });
+
+          const payload = await response.json();
+          if (!response.ok || !payload.ok) {
+            throw new Error(payload.error || "The transfer could not be started.");
+          }
+        } catch (error) {
+          formError.classList.remove("hidden");
+          formError.textContent = error.message || "The transfer could not be started.";
+        }
+      });
+
+      copyBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(resultLink.value);
+          copyFeedback.textContent = "Gofile link copied to clipboard.";
+        } catch {
+          copyFeedback.textContent = "Copy failed. Please copy the link manually.";
+        }
+      });
+
+      connectProgressStream();
+      updateButtonState();
+    </script>
+  </body>
+</html>
+
