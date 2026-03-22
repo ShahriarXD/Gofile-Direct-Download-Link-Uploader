@@ -9,6 +9,12 @@ A sleek, modern web application that acts as a high-speed middleman for your fil
 
 Built with a premium, glassmorphism UI and powered by a robust Node.js backend.
 
+## Preview
+
+![Remote URL to Gofile Downloader](ss.png)
+
+Live app: https://huggingface.co/spaces/rafin101/downloader-backend
+
 ## ✨ Features
 
 * **Cloud-to-Cloud Transfer:** Download huge files to the server and push them to Gofile without eating up your personal internet data.
@@ -27,17 +33,3 @@ Built with a premium, glassmorphism UI and powered by a robust Node.js backend.
 * Node.js & Express.js
 * Axios (for stream handling)
 * Form-Data (for Gofile API integration)
-
-## 🚀 Getting Started
-
-To run this project locally on your machine, follow these steps:
-
-### Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) installed.
-
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git](https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git)
-   cd YOUR_REPO_NAME
